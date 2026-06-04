@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analizador GSA · Gasometría Arterial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F1EA;
+    --paper-2:#ECE7DC;
+    --ink:#13201D;
+    --ink-soft:#4A5953;
+    --teal:#0E8C7F;
+    --teal-deep:#0A5E55;
+    --signal:#D9482F;
+    --line:rgba(19,32,29,.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Hanken Grotesk',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px}
+  .mono{font-family:'Space Mono',monospace;letter-spacing:-.02em}
+  .label{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--teal-deep)}
+
+  /* ── HERO ───────────────────────────── */
+  .hero{
+    position:relative;
+    background:var(--ink);
+    color:var(--paper);
+    padding:72px 0 88px;
+    overflow:hidden;
+  }
+  .hero .wrap{position:relative;z-index:2}
+  .curve{position:absolute;inset:0;z-index:1;opacity:.16}
+  .curve path{fill:none;stroke:var(--teal);stroke-width:2}
+  .badge{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+    color:#9FE6DB;border:1px solid rgba(159,230,219,.35);
+    padding:7px 14px;border-radius:100px;margin-bottom:30px;
+    opacity:0;animation:rise .7s .05s forwards;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--signal);box-shadow:0 0 0 0 rgba(217,72,47,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(217,72,47,.55)}70%{box-shadow:0 0 0 8px rgba(217,72,47,0)}100%{box-shadow:0 0 0 0 rgba(217,72,47,0)}}
+  h1{
+    font-family:'Fraunces',serif;font-weight:500;
+    font-size:clamp(42px,8vw,84px);line-height:.98;letter-spacing:-.02em;
+    margin-bottom:22px;opacity:0;animation:rise .8s .15s forwards;
+  }
+  h1 em{font-style:italic;color:#7FD9CC}
+  .lede{
+    font-size:clamp(17px,2.4vw,21px);max-width:560px;color:#C8D2CE;
+    opacity:0;animation:rise .8s .28s forwards;
+  }
+  .hero-cta{margin-top:38px;display:flex;gap:14px;flex-wrap:wrap;opacity:0;animation:rise .8s .4s forwards}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    font-weight:600;font-size:15px;text-decoration:none;
+    padding:15px 26px;border-radius:12px;transition:transform .18s ease,box-shadow .18s ease;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:var(--teal);color:#fff;box-shadow:0 8px 24px -8px rgba(14,140,127,.6)}
+  .btn-primary:hover{box-shadow:0 14px 30px -8px rgba(14,140,127,.7)}
+  .btn-ghost{background:transparent;color:var(--paper);border:1px solid rgba(244,241,234,.3)}
+  .btn-ghost:hover{border-color:var(--paper)}
+
+  /* ── SECTIONS ───────────────────────── */
+  section{padding:78px 0}
+  .sec-head{margin-bottom:46px}
+  .sec-head h2{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(28px,4.5vw,42px);line-height:1.05;letter-spacing:-.01em;margin-top:12px}
+
+  /* features */
+  .feat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .feat{background:var(--paper);padding:30px 28px}
+  .feat .num{font-family:'Space Mono',monospace;font-size:12px;color:var(--teal);margin-bottom:16px}
+  .feat h3{font-size:19px;font-weight:700;margin-bottom:8px}
+  .feat p{color:var(--ink-soft);font-size:15px}
+
+  /* steps */
+  .steps{counter-reset:s}
+  .step{
+    display:flex;gap:26px;padding:28px 0;border-top:1px solid var(--line);
+    align-items:flex-start;
+  }
+  .step:last-child{border-bottom:1px solid var(--line)}
+  .step .n{
+    counter-increment:s;flex:none;
+    width:48px;height:48px;border-radius:50%;
+    border:1.5px solid var(--teal);color:var(--teal-deep);
+    display:grid;place-items:center;font-family:'Space Mono',monospace;font-weight:700;font-size:17px;
+  }
+  .step .n::before{content:counter(s,decimal-leading-zero)}
+  .step h3{font-size:20px;font-weight:700;margin-bottom:5px}
+  .step p{color:var(--ink-soft);font-size:15.5px}
+  .step p code{background:var(--paper-2);padding:2px 7px;border-radius:5px;font-family:'Space Mono',monospace;font-size:13px}
+
+  /* pago band */
+  .pago{background:var(--paper-2);border-radius:20px;padding:46px 40px;text-align:center}
+  .price{font-family:'Fraunces',serif;font-size:clamp(40px,9vw,64px);font-weight:600;letter-spacing:-.02em;line-height:1}
+  .price small{font-size:.4em;color:var(--ink-soft);font-family:'Hanken Grotesk',sans-serif;font-weight:600}
+  .pago .ways{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+  .way{background:var(--paper);border:1px solid var(--line);border-radius:100px;padding:9px 18px;font-size:13.5px;font-weight:600;font-family:'Space Mono',monospace;letter-spacing:-.02em}
+
+  /* contacto */
+  .contact{background:var(--ink);color:var(--paper);text-align:center;border-radius:24px;padding:60px 32px;position:relative;overflow:hidden}
+  .contact h2{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(30px,5vw,46px);line-height:1.04;margin-bottom:14px}
+  .contact p{color:#C8D2CE;max-width:440px;margin:0 auto 34px}
+  .contact-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .btn-wa{background:#25D366;color:#06351b}
+  .btn-tg{background:#229ED9;color:#fff}
+  .btn-mail{background:transparent;color:var(--paper);border:1px solid rgba(244,241,234,.35)}
+
+  /* footer */
+  footer{padding:48px 0 60px;text-align:center}
+  .disclaimer{max-width:620px;margin:0 auto 22px;font-size:13px;color:var(--ink-soft);line-height:1.6}
+  .foot-mark{font-family:'Fraunces',serif;font-style:italic;font-size:18px}
+
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+  .badge,h1,.lede,.hero-cta{transform:translateY(16px)}
+
+  @media(max-width:640px){
+    .feat-grid{grid-template-columns:1fr}
+    section{padding:58px 0}
+    .step{gap:18px}
+    .pago{padding:36px 22px}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ───────── HERO ───────── -->
+  <header class="hero">
+    <svg class="curve" viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,380 C150,375 230,360 320,300 C400,245 440,150 540,95 C640,45 760,28 1000,22"/>
+      <path d="M0,395 C200,390 300,378 400,330 C500,280 560,180 680,130 C800,82 880,70 1000,66" style="opacity:.5"/>
+    </svg>
+    <div class="wrap">
+      <span class="badge"><span class="dot"></span>Herramienta clínica · Gasometría arterial</span>
+      <h1>Analizador <em>GSA</em></h1>
+      <p class="lede">Interpretación de gasometría arterial al lado de la cama del paciente. Diseñada para el contexto clínico de altura y para hospitales con conectividad limitada.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#contacto">Solicitar acceso →</a>
+        <a class="btn btn-ghost" href="#como">Cómo obtenerla</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ───────── QUÉ HACE ───────── -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">Qué resuelve</span>
+        <h2>Decisiones de gasometría, más rápidas y confiables.</h2>
+      </div>
+      <div class="feat-grid">
+        <div class="feat">
+          <div class="num">/ 01</div>
+          <h3>Análisis completo</h3>
+          <p>Interpretación del estado ácido-base, oxigenación y trastornos mixtos a partir de los valores que ingresas.</p>
+        </div>
+        <div class="feat">
+          <div class="num">/ 02</div>
+          <h3>Anion Gap corregido</h3>
+          <p>Corrección automática del anion gap por hipoalbuminemia, un detalle que cambia conductas clínicas.</p>
+        </div>
+        <div class="feat">
+          <div class="num">/ 03</div>
+          <h3>Funciona sin conexión</h3>
+          <p>Modo offline pensado para guardias, áreas rurales y zonas del hospital sin señal.</p>
+        </div>
+        <div class="feat">
+          <div class="num">/ 04</div>
+          <h3>Acceso seguro</h3>
+          <p>Cuenta personal con sesión única por dispositivo. Tu licencia es tuya y no se comparte.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── CÓMO OBTENERLA ───────── -->
+  <section id="como" style="background:var(--paper-2)">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="label">El proceso · 5 pasos</span>
+        <h2>Así obtienes tu acceso.</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="n"></div>
+          <div><h3>Contáctame</h3><p>Escríbeme por WhatsApp, Telegram o correo (botones más abajo). Cuéntame que quieres la licencia del Analizador GSA.</p></div>
+        </div>
+        <div class="step">
+          <div class="n"></div>
+          <div><h3>Realiza el pago</h3><p>Pago único, sin suscripciones. Te confirmo los medios de pago disponibles y los datos al momento.</p></div>
+        </div>
+        <div class="step">
+          <div class="n"></div>
+          <div><h3>Recibe tus credenciales</h3><p>Creo tu cuenta personal y te envío tu <code>usuario</code> y <code>correo</code> de acceso junto al enlace para descargar la app.</p></div>
+        </div>
+        <div class="step">
+          <div class="n"></div>
+          <div><h3>Instala la aplicación</h3><p>Descargas el archivo e instalas. En Android puede que tengas que permitir la instalación desde “orígenes desconocidos” la primera vez.</p></div>
+        </div>
+        <div class="step">
+          <div class="n"></div>
+          <div><h3>Inicia sesión y listo</h3><p>Entras con tus credenciales una sola vez. A partir de ahí funciona, incluso sin conexión a internet.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── PAGO ───────── -->
+  <section>
+    <div class="wrap">
+      <div class="pago">
+        <span class="label">Pago único · acceso permanente</span>
+        <div class="price" style="margin-top:14px">$<span data-edit="precio">__</span> <small>USD · un solo pago</small></div>
+        <div class="ways">
+          <span class="way">Transferencia</span>
+          <span class="way">DeUna</span>
+          <span class="way">PayPhone</span>
+          <span class="way">PayPal</span>
+        </div>
+        <p style="color:var(--ink-soft);font-size:14px;margin-top:22px">Sin mensualidades. Pagas una vez y la licencia queda asociada a tu cuenta.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── CONTACTO ───────── -->
+  <section id="contacto" style="padding-top:20px">
+    <div class="wrap">
+      <div class="contact">
+        <span class="label" style="color:#9FE6DB">Contacto directo</span>
+        <h2>¿Listo para empezar?</h2>
+        <p>Escríbeme por el canal que prefieras y te guío en todo el proceso. Suelo responder en el día.</p>
+        <div class="contact-cta">
+          <!-- EDITA el número (formato internacional, sin + ni espacios) y el texto -->
+          <a class="btn btn-wa" href="https://wa.me/593XXXXXXXXX?text=Hola%20Diego,%20me%20interesa%20la%20licencia%20del%20Analizador%20GSA" target="_blank" rel="noopener">WhatsApp</a>
+          <!-- EDITA tu usuario de Telegram -->
+          <a class="btn btn-tg" href="https://t.me/TU_USUARIO" target="_blank" rel="noopener">Telegram</a>
+          <!-- EDITA tu correo -->
+          <a class="btn btn-mail" href="mailto:tucorreo@ejemplo.com?subject=Licencia%20Analizador%20GSA&body=Hola%20Diego,%20me%20interesa%20obtener%20el%20Analizador%20GSA.">Correo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── FOOTER ───────── -->
+  <footer>
+    <div class="wrap">
+      <p class="disclaimer">El Analizador GSA es una herramienta de apoyo a la decisión clínica. No sustituye el juicio del profesional de salud ni la valoración integral del paciente. La responsabilidad de cualquier conducta clínica recae siempre en el médico tratante.</p>
+      <p class="foot-mark">Analizador GSA</p>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:6px" class="mono">Desarrollado en Quito, Ecuador</p>
+    </div>
+  </footer>
+
+</body>
+</html>
